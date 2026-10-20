@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import ApplicationForm from '../components/ApplicationForm';
+import CoverLetterModal from '../components/CoverLetterModal';
 
 const STATUSES = ['Applied', 'Interview', 'Offer', 'Rejected'];
 const BADGE = {
@@ -28,6 +29,7 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [letterFor, setLetterFor] = useState(null);
 
   const handleError = (err) => {
     if (err.response?.status === 401) return logout();
@@ -86,9 +88,8 @@ export default function Dashboard() {
   const needFollowUp = apps.filter((a) => a.status === 'Applied' && daysSince(a.appliedDate) >= 5);
 
   const glass = 'bg-white/10 backdrop-blur-md border border-white/10 shadow-xl';
- const lift = 'transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:bg-white/20 hover:border-violet-300/50 hover:shadow-2xl hover:shadow-violet-500/30';
-
- console.log('NEW DASHBOARD LOADED');
+  const lift =
+    'transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white/15 hover:border-violet-300/30 hover:shadow-2xl hover:shadow-violet-900/40';
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#150f22] p-4 sm:p-6">
@@ -100,9 +101,12 @@ export default function Dashboard() {
         <div className={`fade-up ${glass} p-5 rounded-2xl flex items-center justify-between mb-5`}>
           <div>
             <p className="text-sm text-violet-200/70">{greeting()},</p>
-            <h1 className="text-2xl sm:text-3xl font-bold bg-linear-to-r from-violet-300 via-fuchsia-300 to-pink-300 bg-clip-text text-transparent">
-              {user?.name} 👋
-            </h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">
+  <span className="bg-linear-to-r from-violet-300 via-fuchsia-300 to-pink-300 bg-clip-text text-transparent">
+    {user?.name}
+  </span>{' '}
+  👋
+</h1>
             <p className="text-xs text-white/50 mt-1">Track every application, never miss a follow-up.</p>
           </div>
           <button
@@ -139,30 +143,46 @@ export default function Dashboard() {
         {/* Controls */}
         <div className="flex flex-col sm:flex-row gap-2 mb-5">
           <input
-            placeholder="Search by company..." value={search} onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by company..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
             className="flex-1 bg-white/10 border border-white/15 rounded-lg px-3 py-2.5 text-white placeholder-white/40 outline-none focus:ring-2 focus:ring-violet-400"
           />
           <select
-            value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
             className="bg-white/10 border border-white/15 rounded-lg px-3 py-2.5 text-white outline-none focus:ring-2 focus:ring-violet-400"
           >
             <option className="bg-[#1d1330]">All</option>
-            {STATUSES.map((s) => <option key={s} className="bg-[#1d1330]">{s}</option>)}
+            {STATUSES.map((s) => (
+              <option key={s} className="bg-[#1d1330]">
+                {s}
+              </option>
+            ))}
           </select>
           <button
-            onClick={() => { setEditing(null); setShowForm(true); }}
+            onClick={() => {
+              setEditing(null);
+              setShowForm(true);
+            }}
             className="bg-linear-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-violet-900/40 transition hover:-translate-y-0.5"
           >
             + Add application
           </button>
         </div>
 
+        {/* AI cover letter popup */}
+        {letterFor && <CoverLetterModal application={letterFor} onClose={() => setLetterFor(null)} />}
+
         {showForm && (
           <ApplicationForm
             key={editing?._id || 'new'}
             initial={editing}
             onSave={handleSave}
-            onCancel={() => { setShowForm(false); setEditing(null); }}
+            onCancel={() => {
+              setShowForm(false);
+              setEditing(null);
+            }}
           />
         )}
 
@@ -192,14 +212,29 @@ export default function Dashboard() {
                   </p>
                   {a.notes && <p className="text-xs text-white/50 mt-1">📝 {a.notes}</p>}
                   {a.link && (
-                    <a href={a.link} target="_blank" rel="noreferrer" className="text-xs text-violet-300 hover:text-violet-200 hover:underline">
+                    <a
+                      href={a.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-violet-300 hover:text-violet-200 hover:underline"
+                    >
                       Open job link ↗
                     </a>
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => { setEditing(a); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    onClick={() => setLetterFor(a)}
+                    className="text-sm px-4 py-1.5 rounded-lg border border-violet-300/40 text-violet-200 hover:bg-violet-400/10 transition"
+                  >
+                    ✨ Cover letter
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditing(a);
+                      setShowForm(true);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
                     className="text-sm px-4 py-1.5 rounded-lg border border-white/20 text-white/85 hover:bg-white/10 transition"
                   >
                     Edit

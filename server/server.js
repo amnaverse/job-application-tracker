@@ -13,6 +13,7 @@ app.use(express.json());
 app.get('/', (req, res) => res.send('Job Tracker API is running'));
 app.use('/auth', require('./routes/auth'));
 app.use('/applications', require('./routes/applications'));
+app.use('/ai', require('./routes/ai'));
 const PORT = process.env.PORT || 5000;
 
 connectDB().then(() => {
