@@ -15,26 +15,37 @@ export default function CoverLetterModal({ application, onClose }) {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const handleGenerate = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLetter('');
-    setCopied(false);
-    setLoading(true);
-    try {
-      localStorage.setItem('coverSkills', skills);
-      const { data } = await api.post('/ai/cover-letter', {
+const handleGenerate = async (e) => {
+  e.preventDefault();
+  setError('');
+  setLetter('');
+  setCopied(false);
+  setLoading(true);
+  try {
+    localStorage.setItem('coverSkills', skills);
+
+    const send = () =>
+      api.post('/ai/cover-letter', {
         applicationId: application._id,
         skills,
         jobDescription,
       });
-      setLetter(data.coverLetter);
+
+    let data;
+    try {
+      ({ data } = await send());
     } catch (err) {
-      setError(err.response?.data?.message || 'Could not reach the server');
-    } finally {
-      setLoading(false);
+      // Server jawab hi na de (soya hua) to ek baar dobara koshish karo
+      if (err.response) throw err;
+      ({ data } = await send());
     }
-  };
+    setLetter(data.coverLetter);
+  } catch (err) {
+    setError(err.response?.data?.message || 'Could not reach the server');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(letter);
